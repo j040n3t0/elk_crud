@@ -8,6 +8,8 @@ from elasticsearch import Elasticsearch
 
 app = Flask(__name__)
 
+######### Funções
+
 def elastic_insert(nome,sobrenome,ElkIP):
 
 	es = Elasticsearch([ElkIP])
@@ -39,8 +41,12 @@ def elastic_search(nome,sobrenome,ElkIP):
 	nome = str(doc['nome'])
 	print sobrenome
 	print nome
-	res = es.search(index="usuarios", body={"query": {"query_string": { "query": "nome: %s AND sobrenome: %s" % (nome,sobrenome)}}})
-	#res = es.search(index="usuarios", body={"query": {"match_all": {}}})
+	if nome == "all" or sobrenome == "all":
+		res = es.search(index="usuarios", body={"query": {"match_all": {}}})
+		#res = es.search(index="usuarios", body={"query": {"query_string": { "query": "nome: %s AND sobrenome: %s" % (nome,sobrenome)}}})
+	else:
+		res = es.search(index="usuarios", body={"query": {"query_string": { "query": "nome: %s AND sobrenome: %s" % (nome,sobrenome)}}})
+	#	res = es.search(index="usuarios", body={"query": {"match_all": {}}})
 	#print "\n\n" + str(res) + "\n\n" 
 	print("Got %d Hits:" % res['hits']['total']['value'])
 	result_list = []
@@ -51,8 +57,9 @@ def elastic_search(nome,sobrenome,ElkIP):
 		result_list.append("ID: %s | Nome: %s e Sobrenome: %s" % (hit["_id"], hit["_source"]["nome"],hit["_source"]["sobrenome"]))
 	return result_list
 
-def elastic_update(id,nome,sobrenome):
-	es = Elasticsearch(['10.0.1.69'])
+def elastic_update(id,nome,sobrenome,ElkIP):
+	es = Elasticsearch([ElkIP])
+	#es = Elasticsearch(['10.0.1.69'])
 
 	doc = {
 	    'nome': nome ,
@@ -62,8 +69,9 @@ def elastic_update(id,nome,sobrenome):
 	res = es.index(index="usuarios", id=id, body=doc)
 	print(res['result'])
 
-def elastic_delete(id,nome,sobrenome):
-	es = Elasticsearch(['10.0.1.69'])
+def elastic_delete(id,nome,sobrenome,ElkIP):
+	es = Elasticsearch([ElkIP])
+	#es = Elasticsearch(['10.0.1.69'])
 
 	doc = {
 	    'nome': nome ,
@@ -72,6 +80,8 @@ def elastic_delete(id,nome,sobrenome):
 
 	res = es.delete(index="usuarios", id=id)
 	print(res['result'])
+
+#####################################
 
 @app.route('/')
 def home():
@@ -88,18 +98,18 @@ def insert():
 	#print "O IP do servidor e " + ElkIP
 	#print "O nome do individuo e " + output
 	if firstName and lastName:
-		return jsonify({'output':'Full Name: ' + output})
+		return jsonify({'output':'Dado inserido: ' + output})
 	return jsonify({'output' : 'Nenhum dado encontrado!'})
 
 @app.route('/search',methods= ['POST'])
 def search():
-	print request.form
+	#print request.form
 	ElkIP = request.form['ElkIP']
 	firstName = request.form['searchfirstName']
 	lastName = request.form['searchlastName']
 	search_result = elastic_search(firstName,lastName,ElkIP)
 	#output = str(search_result)
-	print search_result
+	#print search_result
 	output = search_result
 
 	try:
@@ -110,21 +120,23 @@ def search():
 
 @app.route('/update',methods= ['POST'])
 def update():
-	print request.form
+	#print request.form
+	ElkIP = request.form['ElkIP']
 	id_user = request.form['id_user']
 	nome_user = request.form['nome_user']
 	sobrenome_user = request.form['sobrenome_user']
-	elastic_update(id_user,nome_user,sobrenome_user)
+	elastic_update(id_user,nome_user,sobrenome_user,ElkIP)
 	return jsonify({'output' : 'Valor atualizado!'})
 
 @app.route('/delete',methods= ['POST'])
 def delete():
-	print "\n\nChamou o DELETE\n\n"
-	print request.form
+	#print "\n\nChamou o DELETE\n\n"
+	#print request.form
+	ElkIP = request.form['ElkIP']
 	id_user = request.form['id_user']
 	nome_user = request.form['nome_user']
 	sobrenome_user = request.form['sobrenome_user']
-	elastic_delete(id_user,nome_user,sobrenome_user)
+	elastic_delete(id_user,nome_user,sobrenome_user,ElkIP)
 	return jsonify({'output' : 'Valor removido!'})
 
 if __name__ == "__main__":

@@ -103,6 +103,7 @@
               $('#searchOutput').text(data.output).show();
             } else {
               var search_return = data.output;
+              //$('#searchOutput').append("<h3>"+search_return+"</h3>").show();
               var search_return = search_return.split(" ");
               var id = search_return[1]
               var nome = search_return[4]
@@ -121,6 +122,7 @@
           $('#atualizar').on('submit', function(event) {
             $.ajax({
               data : {
+                ElkIP : $('#ElkIP').val(),
                 id_user : $('#id_user').val(),
                 nome_user : $('#nome_user').val(),
                 sobrenome_user: $('#sobrenome_user').val(),
@@ -141,6 +143,7 @@
           $('#deletar').on('submit', function(event) {
             $.ajax({
               data : {
+                ElkIP : $('#ElkIP').val(),
                 id_user : $('#id_user').val(),
                 nome_user : $('#nome_user').val(),
                 sobrenome_user: $('#sobrenome_user').val(),
